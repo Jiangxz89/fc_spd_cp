@@ -1,0 +1,389 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.hys.dao.PdConsumablesOrderDao">
+    
+	<sql id="pdConsumablesOrderColumns">
+		a.id AS "id",
+		a.number AS "number",
+		a.hospital AS "hospital",
+		a.order_quantity AS "orderQuantity",
+		a.order_amount AS "orderAmount",
+		a.order_state AS "orderState",
+		a.order_date AS "orderDate",
+		a.refuse_reason AS "refuseReason",
+		a.audit_by AS "auditBy",
+		a.audit_date AS "auditDate",
+		a.sync_date AS "syncDate",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<!-- 医院表字段 -->
+	<sql id="pdHospitalColumns">
+		h.name AS "hospitalName"
+	</sql>
+	
+	<sql id="pdConsumablesOrderJoins">
+	</sql>
+	
+	<!-- 耗材订单详情 -->
+	<sql id="pdConsumablesOrderDetailJoins">
+		LEFT JOIN pd_consumables_order_detail od on a.id = od.order_id
+	</sql>
+	
+	<!-- 耗材表 -->
+	<sql id="pdProductJoins">
+		LEFT JOIN pd_product p ON od.number = p.number
+	</sql>
+	
+	<!-- 生产厂家表 -->
+	<sql id="pdVenderJoins">
+		LEFT JOIN pd_vender v ON p.vender_id = v.id
+	</sql>
+	
+	<!-- 医院表 -->
+	<sql id="pdHospitalJoins">
+		LEFT JOIN pd_hospital h ON a.hospital = h.number
+	</sql>
+	
+	<select id="get" resultType="PdConsumablesOrder">
+		SELECT 
+			<include refid="pdConsumablesOrderColumns"/>,
+			<include refid="pdHospitalColumns"/>
+		FROM pd_consumables_order a
+		<include refid="pdConsumablesOrderJoins"/>
+		<include refid="pdHospitalJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="getByNumber" resultType="PdConsumablesOrder">
+		SELECT 
+			<include refid="pdConsumablesOrderColumns"/>,
+			<include refid="pdHospitalColumns"/>
+		FROM pd_consumables_order a
+		<include refid="pdConsumablesOrderJoins"/>
+		<include refid="pdHospitalJoins"/>
+		WHERE a.number = #{number}
+	</select>
+	
+	<select id="findList" resultType="PdConsumablesOrder">
+		SELECT 
+			<include refid="pdConsumablesOrderColumns"/>,
+			<include refid="pdHospitalColumns"/>
+		FROM pd_consumables_order a
+		<include refid="pdConsumablesOrderJoins"/>
+		<include refid="pdConsumablesOrderDetailJoins"/>
+		<include refid="pdProductJoins"/>
+		<include refid="pdVenderJoins"/>
+		<include refid="pdHospitalJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="queryDate != null and queryDate != ''">
+				AND DATE_FORMAT(a.order_date,'%Y-%m-%d') = DATE_FORMAT( #{queryDate}, '%Y-%m-%d')
+			</if>
+			<if test="number != null and number != ''">
+				AND a.number = #{number}
+			</if>
+			<if test="orderState != null and orderState != ''">
+				AND a.order_state = #{orderState}
+			</if>
+			<if test="productType != null and productType != ''">
+				and p.type = #{productType}
+			</if>
+			<if test="enterprise != null and enterprise != ''">
+				AND v.name = #{enterprise}
+			</if>
+			<if test="hospitalName != null and hospitalName != ''">
+				AND h.name = #{hospitalName}
+			</if>
+			<if test="syncDate != null and syncDate != ''">
+				AND DATE_FORMAT(a.sync_date,'%Y-%m-%d') = DATE_FORMAT( #{syncDate}, '%Y-%m-%d')
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<!-- 查询耗材订单列表 -->
+	<select id="findDataList" resultType="PdConsumablesOrder">
+		SELECT 
+			<include refid="pdConsumablesOrderColumns"/>,
+			<include refid="pdHospitalColumns"/>
+		FROM pd_consumables_order a
+		<include refid="pdConsumablesOrderJoins"/>
+		<include refid="pdConsumablesOrderDetailJoins"/>
+		<include refid="pdProductJoins"/>
+		<include refid="pdVenderJoins"/>
+		<include refid="pdHospitalJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="queryDate != null and queryDate != ''">
+				AND a.order_date = #{queryDate}
+			</if>
+			<if test="number != null and number != ''">
+				AND a.number = #{number}
+			</if>
+			<if test="orderState != null and orderState != ''">
+				AND a.order_state = #{orderState}
+			</if>
+			<if test="productType != null and productType != ''">
+				and p.type = #{productType}
+			</if>
+			<if test="enterprise != null and enterprise != ''">
+				AND v.name = #{enterprise}
+			</if>
+			<if test="hospitalName != null and hospitalName != ''">
+				AND h.name = #{hospitalName}
+			</if>
+		</where>
+		GROUP BY a.number
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY a.order_state asc,a.order_date desc, ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.order_state asc, a.audit_date desc, a.order_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="PdConsumablesOrder">
+		SELECT 
+			<include refid="pdConsumablesOrderColumns"/>
+		FROM pd_consumables_order a
+		<include refid="pdConsumablesOrderJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO pd_consumables_order(
+			id,
+			number,
+			hospital,
+			order_quantity,
+			order_amount,
+			order_state,
+			order_date,
+			refuse_reason,
+			audit_by,
+			audit_date,
+			sync_date,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{number},
+			#{hospital},
+			#{orderQuantity},
+			#{orderAmount},
+			#{orderState},
+			#{orderDate},
+			#{refuseReason},
+			#{auditBy},
+			#{auditDate},
+			#{syncDate},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE pd_consumables_order SET 	
+			number = #{number},
+			hospital = #{hospital},
+			order_quantity = #{orderQuantity},
+			order_amount = #{orderAmount},
+			order_state = #{orderState},
+			order_date = #{orderDate},
+			refuse_reason = #{refuseReason},
+			audit_by = #{auditBy},
+			audit_date = #{auditDate},
+			sync_date = #{syncDate},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE pd_consumables_order SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+		<!-- 更新审核状态 -->
+	<update id="updateStatus">
+		UPDATE pd_consumables_order SET 
+			order_state = #{orderState},
+			refuse_reason = #{refuseReason},
+			audit_by = #{auditBy},
+			audit_date = now()
+		WHERE id = #{id}
+	</update>
+	
+		<!-- 按时间区间查询 -->
+	<select id="findListByDate" resultType="PdConsumablesOrder">
+		SELECT 
+			<include refid="pdConsumablesOrderColumns"/>,
+			<include refid="pdHospitalColumns"/>
+		FROM pd_consumables_order a
+		<include refid="pdHospitalJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL} AND a.order_date between #{startDate} and #{endDate}
+			<if test="hospital != null and hospital != ''">
+				AND a.hospital = #{hospital}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+	<!-- 获取订单详细信息 -->
+	<select id="getConsumablesOrder" resultType="PdConsumablesOrder">
+		SELECT 
+			<include refid="pdConsumablesOrderColumns"/>,
+			<include refid="pdHospitalColumns"/>
+		FROM pd_consumables_order a
+		<include refid="pdConsumablesOrderJoins"/>
+		<include refid="pdConsumablesOrderDetailJoins"/>
+		<include refid="pdProductJoins"/>
+		<include refid="pdVenderJoins"/>
+		<include refid="pdHospitalJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+				<if test="id != null and id != ''">
+					AND a.id = #{id}
+				</if>
+				<if test="number != null and number != ''">
+					AND a.number = #{number}
+				</if>
+		</where>
+		GROUP BY a.number
+	</select>
+
+
+	<!--批量保存耗材订单详情-->
+	<insert id="batchSave">
+		INSERT INTO pd_consumables_order(
+			id,
+			number,
+			hospital,
+			order_quantity,
+			order_amount,
+			order_state,
+			order_date,
+			refuse_reason,
+			audit_by,
+			audit_date,
+			sync_date,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		)  VALUES 
+		<foreach collection="list" separator="," item="item">
+			(
+			#{item.id},
+			#{item.number},
+			#{item.hospital},
+			#{item.orderQuantity},
+			#{item.orderAmount},
+			#{item.orderState},
+			#{item.orderDate},
+			#{item.refuseReason},
+			#{item.auditBy},
+			#{item.auditDate},
+			#{item.syncDate},
+			#{item.createBy.id},
+			#{item.createDate},
+			#{item.updateBy.id},
+			#{item.updateDate},
+			#{item.remarks},
+			#{item.delFlag}
+		)
+		</foreach>
+	</insert>
+	
+	<!-- 批量更新耗材订单状态 -->
+	<update id="batchUpdate" parameterType="java.util.HashMap">
+		update pd_consumables_order SET 
+			order_state = #{orderState}
+	where number in
+    <foreach collection="ids" index="index" item="item" 
+        separator="," open="(" close=")">
+        #{item}
+    </foreach>
+	</update>
+	
+	<!-- 采购金额排名TOP10 -->
+	<select id="findPurchaseAmount" resultType="PdConsumablesOrder">
+		SELECT
+			a.hospital, h.`name` AS hospitalName, SUM(a.order_amount) as totalAmount
+		FROM
+			`pd_consumables_order` a
+		LEFT JOIN pd_hospital h ON a.hospital = h.number
+		WHERE
+			 a.del_flag = #{DEL_FLAG_NORMAL} 
+			 <if test="startDate != null and startDate != '' and endDate != null and endDate != ''">
+				AND a.order_date between #{startDate} and #{endDate}			 	
+			 </if>
+		GROUP BY a.hospital
+		ORDER BY totalAmount DESC
+		LIMIT 10
+	</select>
+	
+		<!-- 根据医院查询某天的订单 -->
+	<select id="getOrderByHospAndDayTime" resultType="java.util.HashMap">
+		SELECT 
+			a.number as xh,
+			a.order_state as jlzt
+		FROM pd_consumables_order a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="syncDate != null and syncDate != ''">
+				AND DATE_FORMAT(a.sync_date,'%Y-%m-%d') = DATE_FORMAT( #{syncDate}, '%Y-%m-%d')
+			</if>
+			<if test="hospital != null and hospital != ''">
+				AND a.hospital = #{hospital}
+			</if>
+		</where>		
+	</select>
+	
+</mapper>

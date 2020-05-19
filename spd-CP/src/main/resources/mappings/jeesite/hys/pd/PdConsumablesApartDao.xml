@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.hys.dao.PdConsumablesApartDao">
+    
+	<sql id="pdConsumablesApartColumns">
+		a.id AS "id",
+		a.number AS "number",
+		a.order_quantity AS "orderQuantity",
+		a.order_amount AS "orderAmount",
+		a.supplier_id AS "supplierId",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<!-- 供应商字段 -->
+	<sql id="pdSupplierColumns">
+		s.name AS "supplierName"
+	</sql>
+	
+	<!-- 耗材订单字段 -->
+	<sql id="pdConsumablesOrderColumns">
+		co.order_date AS "orderDate",
+		co.order_state AS "orderState",
+		co.hospital AS "hospital"
+	</sql>
+	
+	<!-- 医院字段 -->
+	<sql id="pdHospitalColumns">
+		h.name  AS "hospitalName"
+	</sql>
+	
+	<sql id="pdConsumablesApartJoins">
+	</sql>
+	
+	<!-- 供应商 -->
+	<sql id="pdSupplierJoins">
+		LEFT JOIN pd_supplier s ON a.supplier_id = s.id
+	</sql>
+	
+	<!-- 耗材订单 -->
+	<sql id="pdConsumablesOrderJoins">
+		LEFT JOIN pd_consumables_order co on a.number = co.number
+	</sql>
+	
+	<!-- 医院 -->
+	<sql id="pdHospitalJoins">
+		LEFT JOIN pd_hospital h on co.hospital = h.number
+	</sql>
+	
+    
+	<select id="get" resultType="PdConsumablesApart">
+		SELECT 
+			<include refid="pdConsumablesApartColumns"/>
+		FROM pd_consumables_apart a
+		<include refid="pdConsumablesApartJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="PdConsumablesApart">
+		SELECT 
+			<include refid="pdConsumablesApartColumns"/>,
+			<include refid="pdSupplierColumns"/>,
+			<include refid="pdHospitalColumns"/>,
+			<include refid="pdConsumablesOrderColumns"/>
+		FROM pd_consumables_apart a
+		<include refid="pdConsumablesApartJoins"/>
+		<include refid="pdSupplierJoins"/>
+		<include refid="pdConsumablesOrderJoins"/>
+		<include refid="pdHospitalJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="number != null and number != ''">
+				AND a.number = #{number}
+			</if>
+			<if test="supplierId != null and supplierId != ''">
+				AND a.supplier_id = #{supplierId}
+			</if>
+			<if test="hospitalName != null and hospitalName != ''">
+				AND h.name = #{hospitalName}
+			</if>
+			<if test="queryDate != null and queryDate != ''">
+				AND co.order_date = #{queryDate}
+			</if>
+			<if test="orderState != null and orderState != ''">
+				AND co.order_state = #{orderState}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>	
+				ORDER BY co.audit_date desc, co.order_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="PdConsumablesApart">
+		SELECT 
+			<include refid="pdConsumablesApartColumns"/>
+		FROM pd_consumables_apart a
+		<include refid="pdConsumablesApartJoins"/>
+		<where>
+			
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO pd_consumables_apart(
+			id,
+			number,
+			order_quantity,
+			order_amount,
+			supplier_id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{number},
+			#{orderQuantity},
+			#{orderAmount},
+			#{supplierId},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE pd_consumables_apart SET 	
+			number = #{number},
+			order_quantity = #{orderQuantity},
+			order_amount = #{orderAmount},
+			supplier_id = #{supplierId},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		DELETE FROM pd_consumables_apart
+		WHERE id = #{id}
+	</update>
+	
+	<!--批量保存耗材订单详情-->
+	<insert id="batchSave">
+		INSERT INTO pd_consumables_apart(
+			id,
+			number,
+			order_quantity,
+			order_amount,
+			supplier_id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		)  VALUES 
+		<foreach collection="list" separator="," item="item">
+			(
+			#{item.id},
+			#{item.number},
+			#{item.orderQuantity},
+			#{item.orderAmount},
+			#{item.supplierId},
+			#{item.createBy.id},
+			#{item.createDate},
+			#{item.updateBy.id},
+			#{item.updateDate},
+			#{item.remarks},
+			#{item.delFlag}
+		)
+		</foreach>
+	</insert>
+	
+	<!-- 获取拆分对象 -->
+	<select id="getDetail" resultType="PdConsumablesApart">
+		SELECT 
+			<include refid="pdConsumablesApartColumns"/>,
+			<include refid="pdSupplierColumns"/>,
+			<include refid="pdConsumablesOrderColumns"/>,
+			<include refid="pdHospitalColumns"/>
+		FROM pd_consumables_apart a
+		<include refid="pdConsumablesApartJoins"/>
+		<include refid="pdSupplierJoins"/>
+		<include refid="pdConsumablesOrderJoins"/>
+		<include refid="pdHospitalJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+</mapper>

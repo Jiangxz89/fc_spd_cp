@@ -1,0 +1,351 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.hys.dao.PdVenderDao">
+    
+	<sql id="pdVenderColumns">
+		a.id AS "id",
+		a.name AS "name",
+		a.img_license1_site AS "imgLicense1Site",
+		a.img_license1_name AS "imgLicense1Name",
+		a.img_license1_num AS "imgLicense1Num",
+		a.img_license1_date AS "imgLicense1Date",
+		a.img_license2_site AS "imgLicense2Site",
+		a.img_license2_name AS "imgLicense2Name",
+		a.img_license2_num AS "imgLicense2Num",
+		a.img_license2_date AS "imgLicense2Date",
+		a.img_license3_site AS "imgLicense3Site",
+		a.img_license3_name AS "imgLicense3Name",
+		a.img_license3_num AS "imgLicense3Num",
+		a.img_license3_date AS "imgLicense3Date",
+		a.img_license4_site AS "imgLicense4Site",
+		a.img_license4_name AS "imgLicense4Name",
+		a.img_license4_num AS "imgLicense4Num",
+		a.img_license4_date AS "imgLicense4Date",
+		a.img_license5_site AS "imgLicense5Site",
+		a.img_license5_name AS "imgLicense5Name",
+		a.img_license5_num AS "imgLicense5Num",
+		a.img_license5_date AS "imgLicense5Date",
+		a.img_license6_site AS "imgLicense6Site",
+		a.img_license6_name AS "imgLicense6Name",
+		a.img_license6_num AS "imgLicense6Num",
+		a.img_license6_date AS "imgLicense6Date",
+		a.img_license7_site AS "imgLicense7Site",
+		a.img_license7_name AS "imgLicense7Name",
+		a.img_license7_num AS "imgLicense7Num",
+		a.img_license7_date AS "imgLicense7Date",
+		a.img_license8_site AS "imgLicense8Site",
+		a.img_license8_name AS "imgLicense8Name",
+		a.img_license8_num AS "imgLicense8Num",
+		a.img_license8_date AS "imgLicense8Date",
+		a.img_license9_site AS "imgLicense9Site",
+		a.img_license9_name AS "imgLicense9Name",
+		a.img_license9_num AS "imgLicense9Num",
+		a.img_license9_date AS "imgLicense9Date",
+		a.img_license10_site AS "imgLicense10Site",
+		a.img_license10_name AS "imgLicense10Name",
+		a.img_license10_num AS "imgLicense10Num",
+		a.img_license10_date AS "imgLicense10Date",
+		a.img_license11_site AS "imgLicense11Site",
+		a.img_license11_name AS "imgLicense11Name",
+		a.img_license11_num AS "imgLicense11Num",
+		a.img_license11_date AS "imgLicense11Date",
+		a.img_license12_site AS "imgLicense12Site",
+		a.img_license12_name AS "imgLicense12Name",
+		a.img_license12_num AS "imgLicense12Num",
+		a.img_license12_date AS "imgLicense12Date",
+		a.del_flag AS "delFlag",
+		a.create_by AS "createBy.id",
+		a.update_date AS "updateDate",
+		a.update_by AS "updateBy.id",
+		a.remarks AS "remarks",
+		a.create_date AS "createDate",
+		a.hospital_number AS "hospitalNumber",
+		a.pinyin AS "pinyin"
+	</sql>
+	
+	<sql id="pdVenderJoins">
+	</sql>
+    
+	<select id="get" resultType="PdVender">
+		SELECT 
+			<include refid="pdVenderColumns"/>
+		FROM pd_vender a
+		<include refid="pdVenderJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="PdVender">
+		SELECT 
+			<include refid="pdVenderColumns"/>
+		FROM pd_vender a
+		<include refid="pdVenderJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="name != null and name != ''">
+				AND a.name LIKE 
+					<if test="dbName == 'oracle'">'%'||#{name}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{name}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{name},'%')</if>
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="PdVender">
+		SELECT 
+			<include refid="pdVenderColumns"/>
+		FROM pd_vender a
+		<include refid="pdVenderJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO pd_vender(
+			id,
+			name,
+			img_license1_site,
+			img_license1_name,
+			img_license1_num,
+			img_license1_date,
+			img_license2_site,
+			img_license2_name,
+			img_license2_num,
+			img_license2_date,
+			img_license3_site,
+			img_license3_name,
+			img_license3_num,
+			img_license3_date,
+			img_license4_site,
+			img_license4_name,
+			img_license4_num,
+			img_license4_date,
+			img_license5_site,
+			img_license5_name,
+			img_license5_num,
+			img_license5_date,
+			img_license6_site,
+			img_license6_name,
+			img_license6_num,
+			img_license6_date,
+			img_license7_site,
+			img_license7_name,
+			img_license7_num,
+			img_license7_date,
+			img_license8_site,
+			img_license8_name,
+			img_license8_num,
+			img_license8_date,
+			img_license9_site,
+			img_license9_name,
+			img_license9_num,
+			img_license9_date,
+			img_license10_site,
+			img_license10_name,
+			img_license10_num,
+			img_license10_date,
+			img_license11_site,
+			img_license11_name,
+			img_license11_num,
+			img_license11_date,
+			img_license12_site,
+			img_license12_name,
+			img_license12_num,
+			img_license12_date,
+			del_flag,
+			create_by,
+			update_date,
+			update_by,
+			remarks,
+			create_date,
+			hospital_number,
+			pinyin
+		) VALUES (
+			#{id},
+			#{name},
+			#{imgLicense1Site},
+			#{imgLicense1Name},
+			#{imgLicense1Num},
+			#{imgLicense1Date},
+			#{imgLicense2Site},
+			#{imgLicense2Name},
+			#{imgLicense2Num},
+			#{imgLicense2Date},
+			#{imgLicense3Site},
+			#{imgLicense3Name},
+			#{imgLicense3Num},
+			#{imgLicense3Date},
+			#{imgLicense4Site},
+			#{imgLicense4Name},
+			#{imgLicense4Num},
+			#{imgLicense4Date},
+			#{imgLicense5Site},
+			#{imgLicense5Name},
+			#{imgLicense5Num},
+			#{imgLicense5Date},
+			#{imgLicense6Site},
+			#{imgLicense6Name},
+			#{imgLicense6Num},
+			#{imgLicense6Date},
+			#{imgLicense7Site},
+			#{imgLicense7Name},
+			#{imgLicense7Num},
+			#{imgLicense7Date},
+			#{imgLicense8Site},
+			#{imgLicense8Name},
+			#{imgLicense8Num},
+			#{imgLicense8Date},
+			#{imgLicense9Site},
+			#{imgLicense9Name},
+			#{imgLicense9Num},
+			#{imgLicense9Date},
+			#{imgLicense10Site},
+			#{imgLicense10Name},
+			#{imgLicense10Num},
+			#{imgLicense10Date},
+			#{imgLicense11Site},
+			#{imgLicense11Name},
+			#{imgLicense11Num},
+			#{imgLicense11Date},
+			#{imgLicense12Site},
+			#{imgLicense12Name},
+			#{imgLicense12Num},
+			#{imgLicense12Date},
+			#{delFlag},
+			#{createBy.id},
+			#{updateDate},
+			#{updateBy.id},
+			#{remarks},
+			#{createDate},
+			#{hospitalNumber},
+			#{pinyin}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE pd_vender SET 	
+			name = #{name},
+			img_license1_site = #{imgLicense1Site},
+			img_license1_name = #{imgLicense1Name},
+			img_license1_num = #{imgLicense1Num},
+			img_license1_date = #{imgLicense1Date},
+			img_license2_site = #{imgLicense2Site},
+			img_license2_name = #{imgLicense2Name},
+			img_license2_num = #{imgLicense2Num},
+			img_license2_date = #{imgLicense2Date},
+			img_license3_site = #{imgLicense3Site},
+			img_license3_name = #{imgLicense3Name},
+			img_license3_num = #{imgLicense3Num},
+			img_license3_date = #{imgLicense3Date},
+			img_license4_site = #{imgLicense4Site},
+			img_license4_name = #{imgLicense4Name},
+			img_license4_num = #{imgLicense4Num},
+			img_license4_date = #{imgLicense4Date},
+			img_license5_site = #{imgLicense5Site},
+			img_license5_name = #{imgLicense5Name},
+			img_license5_num = #{imgLicense5Num},
+			img_license5_date = #{imgLicense5Date},
+			img_license6_site = #{imgLicense6Site},
+			img_license6_name = #{imgLicense6Name},
+			img_license6_num = #{imgLicense6Num},
+			img_license6_date = #{imgLicense6Date},
+			img_license7_site = #{imgLicense7Site},
+			img_license7_name = #{imgLicense7Name},
+			img_license7_num = #{imgLicense7Num},
+			img_license7_date = #{imgLicense7Date},
+			img_license8_site = #{imgLicense8Site},
+			img_license8_name = #{imgLicense8Name},
+			img_license8_num = #{imgLicense8Num},
+			img_license8_date = #{imgLicense8Date},
+			img_license9_site = #{imgLicense9Site},
+			img_license9_name = #{imgLicense9Name},
+			img_license9_num = #{imgLicense9Num},
+			img_license9_date = #{imgLicense9Date},
+			img_license10_site = #{imgLicense10Site},
+			img_license10_name = #{imgLicense10Name},
+			img_license10_num = #{imgLicense10Num},
+			img_license10_date = #{imgLicense10Date},
+			img_license11_site = #{imgLicense11Site},
+			img_license11_name = #{imgLicense11Name},
+			img_license11_num = #{imgLicense11Num},
+			img_license11_date = #{imgLicense11Date},
+			img_license12_site = #{imgLicense12Site},
+			img_license12_name = #{imgLicense12Name},
+			img_license12_num = #{imgLicense12Num},
+			img_license12_date = #{imgLicense12Date},
+			update_date = #{updateDate},
+			update_by = #{updateBy.id},
+			remarks = #{remarks},
+			del_flag = #{delFlag},
+			hospital_number = #{hospitalNumber},
+			pinyin = #{pinyin}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE pd_vender SET 
+			del_flag = 1
+		WHERE id = #{id}
+	</update>
+	
+	<update id="deleteById">
+		UPDATE pd_vender SET 
+			del_flag = 1
+		WHERE id = #{id}
+	</update>
+	
+	<select id="getByName" resultType="PdVender">
+		SELECT 
+			<include refid="pdVenderColumns"/>
+		FROM pd_vender a
+		<include refid="pdVenderJoins"/>
+		WHERE a.name = #{name} AND a.del_flag = #{DEL_FLAG_NORMAL}
+	</select>
+	
+	<!-- 校验生产厂家是否唯一 -->
+	<select id="verify" resultType="PdVender">
+		SELECT 
+			<include refid="pdVenderColumns"/>
+		FROM pd_vender a
+		<include refid="pdVenderJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			and a.name = #{name}
+			<if test="id != null and id != ''">
+				AND a.id != #{id}
+			</if>
+		</where>
+	</select>
+	
+	<!--  校验生产厂家是否输入正确 -->
+	<select id="findByName" resultType="PdVender">
+		SELECT 
+			<include refid="pdVenderColumns"/>
+		FROM pd_vender a
+		<include refid="pdVenderJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			and a.name = #{name}
+			<if test="id != null and id != ''">
+				AND a.id != #{id}
+			</if>
+		</where>
+	</select>
+	
+</mapper>

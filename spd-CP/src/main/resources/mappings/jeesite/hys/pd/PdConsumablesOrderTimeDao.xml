@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.hys.dao.PdConsumablesOrderTimeDao">
+    
+	<sql id="pdConsumablesOrderTimeColumns">
+		a.id AS "id",
+		a.number AS "number",
+		a.product_number AS "productNumber",
+		a.order_quantity AS "orderQuantity",
+		a.ps_quantity AS "psQuantity",
+		a.price AS "price",
+		a.amount AS "amount",
+		a.hospital AS "hospital",
+		a.sync_date AS "syncDate",
+		a.check_time AS "checkTime",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<!--耗材订单表字段 -->
+	<sql id="pdConsumablesOrderColumns">
+		co.order_date AS "orderDate"
+	</sql>
+	
+	<!-- 医院表字段 -->
+	<sql id="pdHospitalColumns">
+		h.name AS "hospitalName"
+	</sql>
+	
+	<!-- 耗材信息表字段 -->
+	<sql id="pdProductColumns">
+		p.`name` AS "productName",
+		p.spec AS "spec",
+		p.unit AS "unit"
+	</sql>
+	
+	<!-- 生产厂家表字段 -->
+	<sql id="pdVenderColumns">
+		v.`name` AS "manufacturer"
+	</sql>
+	
+	<!-- 供应商表字段 -->
+	<sql id="pdSupplieColumns">
+		s.`name` AS "supplierName"
+	</sql>
+	
+	<!-- 耗材拆分表字段 -->
+	<sql id="pdConsumablesApartColumns">
+		ca.supplier_id AS "supplierId"
+	</sql>
+	
+	
+	<sql id="pdConsumablesOrderTimeJoins">
+	</sql>
+	
+	<!-- 耗材订单表 -->
+	<sql id="pdConsumablesOrderJoins">
+		LEFT JOIN pd_consumables_order co ON a.number = co.number
+	</sql>
+	
+	<!-- 耗材信息表 -->
+	<sql id="pdProductJoins">
+		LEFT JOIN pd_product p on a.product_number = p.number
+	</sql>
+	
+	<!-- 生产厂家表 -->
+	<sql id="pdVenderJoins">
+		LEFT JOIN pd_vender v ON p.vender_id = v.id
+	</sql>
+	
+	<!-- 医院表 -->
+	<sql id="pdHospitalJoins">
+		LEFT JOIN pd_hospital h ON a.hospital = h.number
+	</sql>
+	
+	<!-- 耗材拆分表 -->
+    <sql id="pdConsumablesApartJoins">
+		LEFT JOIN (SELECT
+			a.*,b.consumables_number
+		FROM
+			`pd_consumables_apart` a
+		LEFT JOIN pd_consumables_apart_relevance b ON a.id = b.apart_id) ca 
+		ON a.number = ca.number AND a.product_number = ca.consumables_number
+	</sql>
+	
+	<!-- 供应商表 -->
+	 <sql id="pdSupplierJoins">
+		LEFT JOIN pd_supplier s on ca.supplier_id = s.id
+	</sql>
+    
+	<select id="get" resultType="PdConsumablesOrderTime">
+		SELECT 
+			<include refid="pdConsumablesOrderTimeColumns"/>
+		FROM pd_consumables_order_time a
+		<include refid="pdConsumablesOrderTimeJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="PdConsumablesOrderTime">
+		SELECT 
+			<include refid="pdConsumablesOrderTimeColumns"/>,
+			<include refid="pdConsumablesOrderColumns"/>,
+			<include refid="pdProductColumns"/>,
+			<include refid="pdVenderColumns"/>,
+			<include refid="pdHospitalColumns"/>,
+			<include refid="pdSupplieColumns"/>
+		FROM pd_consumables_order_time a
+		<include refid="pdConsumablesOrderTimeJoins"/>
+		<include refid="pdConsumablesOrderJoins"/>
+		<include refid="pdProductJoins"/>
+		<include refid="pdVenderJoins"/>
+		<include refid="pdHospitalJoins"/>
+		<include refid="pdConsumablesApartJoins"/>
+		<include refid="pdSupplierJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="queryDate != null and queryDate != ''">
+				AND co.order_date = #{queryDate}
+			</if>
+			<if test="number != null and number != ''">
+				AND a.number = #{number}
+			</if>
+			<if test="productName != null and productName != ''">
+				AND p.name = #{productName}
+			</if>
+			<if test="productNumber != null and productNumber != ''">
+				AND a.product_number = #{productNumber}
+			</if>
+			<if test="hospitalName != null and hospitalName != ''">
+				AND h.name = #{hospitalName}
+			</if>
+			<if test="manufacturer != null and manufacturer != ''">
+				AND v.name = #{manufacturer}
+			</if>
+			<if test="syncDate != null and syncDate != ''">
+				AND DATE_FORMAT(a.sync_date,'%Y-%m-%d') = DATE_FORMAT( #{syncDate}, '%Y-%m-%d')
+			</if>
+			<if test="checkTime != null and checkTime != ''">
+				AND DATE_FORMAT(a.check_time,'%Y-%m-%d') = DATE_FORMAT( #{checkTime}, '%Y-%m-%d')
+			</if>
+			<if test="supplierName != null and supplierName != ''">
+				and s.`name` = #{supplierName}
+			</if>
+		</where>
+		GROUP BY a.id
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="PdConsumablesOrderTime">
+		SELECT 
+			<include refid="pdConsumablesOrderTimeColumns"/>
+		FROM pd_consumables_order_time a
+		<include refid="pdConsumablesOrderTimeJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO pd_consumables_order_time(
+			id,
+			number,
+			product_number,
+			order_quantity,
+			ps_quantity,
+			price,
+			amount,
+			hospital,
+			sync_date,
+			check_time,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{number},
+			#{productNumber},
+			#{orderQuantity},
+			#{psQuantity},
+			#{price},
+			#{amount},
+			#{hospital},
+			#{syncDate},
+			#{checkTime},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE pd_consumables_order_time SET 	
+			number = #{number},
+			product_number = #{productNumber},
+			order_quantity = #{orderQuantity},
+			ps_quantity = #{psQuantity},
+			price = #{price},
+			amount = #{amount},
+			hospital = #{hospital},
+			sync_date = #{syncDate},
+			check_time = #{checkTime},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE pd_consumables_order_time SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<!--保存耗材订单及配送-->
+	<insert id="batchSave">
+		INSERT INTO pd_consumables_order_time(
+			id,
+			number,
+			product_number,
+			order_quantity,
+			ps_quantity,
+			price,
+			amount,
+			hospital,
+			sync_date,
+			check_time,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		)  VALUES 
+		<foreach collection="list" separator="," item="item">
+			(
+			#{item.id},
+			#{item.number},
+			#{item.productNumber},
+			#{item.orderQuantity},
+			#{item.psQuantity},
+			#{item.price},
+			#{item.amount},
+			#{item.hospital},
+			#{item.syncDate},
+			#{item.checkTime},
+			#{item.createBy.id},
+			#{item.createDate},
+			#{item.updateBy.id},
+			#{item.updateDate},
+			#{item.remarks},
+			#{item.delFlag}
+		)
+		</foreach>
+	</insert>
+	
+	<!-- 根据时间查询一段时间内所有的供应商 -->
+	<select id="findSupplierList" resultType="PdConsumablesOrderTime">
+		SELECT 
+			<include refid="pdConsumablesOrderTimeColumns"/>,
+			<include refid="pdConsumablesApartColumns"/>,
+			<include refid="pdSupplieColumns"/>
+		FROM pd_consumables_order_time a
+		<include refid="pdConsumablesOrderTimeJoins"/>
+		<include refid="pdConsumablesApartJoins"/>
+		<include refid="pdSupplierJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="startDate != null and startDate != '' and endDate != null and endDate != ''">
+				AND a.sync_date between #{startDate} and #{endDate}			 	
+			 </if>
+		</where>		
+		GROUP BY ca.supplier_id
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<!-- 企业配送金额比率 -->
+	<select id="findPsAmount" resultType="PdConsumablesOrderTime">
+		SELECT 
+			<include refid="pdConsumablesOrderTimeColumns"/>,
+			<include refid="pdConsumablesApartColumns"/>,
+			<include refid="pdSupplieColumns"/>,
+			<include refid="pdHospitalColumns"/>,
+			sum(a.amount) as totalAmount
+		FROM pd_consumables_order_time a
+		<include refid="pdConsumablesOrderTimeJoins"/>
+		<include refid="pdConsumablesApartJoins"/>
+		<include refid="pdSupplierJoins"/>
+		<include refid="pdHospitalJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="startDate != null and startDate != '' and endDate != null and endDate != ''">
+				AND a.sync_date between #{startDate} and #{endDate}			 	
+			 </if>
+			 <if test="supplierId != null and supplierId != '' ">
+				AND ca.supplier_id = #{supplierId}
+			 </if>
+		</where>		
+		GROUP BY a.hospital
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+</mapper>

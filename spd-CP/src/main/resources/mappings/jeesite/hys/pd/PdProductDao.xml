@@ -1,0 +1,569 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.hys.dao.PdProductDao">
+    
+	<sql id="pdProductColumns">
+		a.id AS "id",
+		a.number AS "number",
+		a.name AS "name",
+		a.spm AS "spm",
+		a.spec AS "spec",
+		a.version AS "version",
+		a.unit AS "unit",
+		a.group_id AS "groupId",
+		a.category_id AS "categoryId",
+		a.type AS "type",
+		a.vender_id AS "venderId",
+		a.supplier_id AS "supplierId",
+		a.pur_price AS "purPrice",
+		a.selling_price AS "sellingPrice",
+		a.registration AS "registration",
+		a.description AS "description",
+		a.img_auth_site AS "imgAuthSite",
+		a.img_auth_num AS "imgAuthNum",
+		a.img_auth_date AS "imgAuthDate",
+		a.img_register1_site AS "imgRegister1Site",
+		a.img_register1_num AS "imgRegister1Num",
+		a.img_register1_date AS "imgRegister1Date",
+		a.img_register2_site AS "imgRegister2Site",
+		a.img_register2_num AS "imgRegister2Num",
+		a.img_register2_date AS "imgRegister2Date",
+		a.img_register3_site AS "imgRegister3Site",
+		a.img_register3_num AS "imgRegister3Num",
+		a.img_register3_date AS "imgRegister3Date",
+		a.img_license1_site AS "imgLicense1Site",
+		a.img_license1_num AS "imgLicense1Num",
+		a.img_license1_date AS "imgLicense1Date",
+		a.img_license2_site AS "imgLicense2Site",
+		a.img_license2_num AS "imgLicense2Num",
+		a.img_license2_date AS "imgLicense2Date",
+		a.img_license3_site AS "imgLicense3Site",
+		a.img_license3_num AS "imgLicense3Num",
+		a.img_license3_date AS "imgLicense3Date",
+		a.img_license4_site AS "imgLicense4Site",
+		a.img_license4_num AS "imgLicense4Num",
+		a.img_license4_date AS "imgLicense4Date",
+		a.img_product_site1 AS "imgProductSite1",
+		a.img_product_site2 AS "imgProductSite2",
+		a.img_product_site3 AS "imgProductSite3",
+		a.del_flag AS "delFlag",
+		a.create_by AS "createBy.id",
+		a.update_date AS "updateDate",
+		a.update_by AS "updateBy.id",
+		a.remarks AS "remarks",
+		a.create_date AS "createDate",
+		a.hospital_number AS "hospitalNumber"
+	</sql>
+	<sql id="pdHospitalColumns">
+		h.name as "hospitalName"
+	</sql>
+	<sql id="pdProductJoins">
+	</sql>
+	<sql id="pdHospitalJoins">
+		left join pd_hospital h on a.hospital_number = h.number
+	</sql>
+
+	<!-- 查询显示优化start 2019年5月29日10:04:36 -->
+	<sql id="pdCategoryColumnsShow">
+		c.`name` as "categoryNameShow"
+	</sql>
+	<sql id="pdGroupColumnsShow">
+		g.`name` as "groupNameShow"
+	</sql>
+	<sql id="pdVenderColumnsShow">
+		e.`name` as "venderNameShow"
+	</sql>
+	<sql id="pdCategoryJoinsShow">
+		LEFT JOIN pd_category c on a.category_id = c.id
+	</sql>
+	<sql id="pdGroupJoinsShow">
+		LEFT JOIN pd_group g on a.group_id = g.id
+	</sql>
+	<sql id="pdVenderJoinsShow">
+		LEFT JOIN pd_vender e on a.vender_id = e.id
+	</sql>
+	<!-- 查询显示优化end 2019年5月29日10:04:31 -->
+    
+	<select id="get" resultType="PdProduct">
+		SELECT 
+			<include refid="pdProductColumns"/>
+		FROM pd_product a
+		<include refid="pdProductJoins"/>
+		WHERE a.id = #{id}
+	</select>
+
+    <!--提供select2 查询的方法 -->
+    <select id="findSelectList" resultType="PdProduct">
+        SELECT
+        <include refid="pdProductColumns"/>
+        FROM pd_product a
+        <include refid="pdProductJoins"/>
+        <where>
+            a.del_flag = #{DEL_FLAG_NORMAL}
+            <if test="name != null and name != ''">
+                AND (
+                a.name LIKE concat('%',#{name},'%')
+                || a.spm LIKE concat('%',#{name},'%')
+                )
+            </if>
+            group by a.name
+        </where>
+    </select>
+
+	<select id="findList" resultType="PdProduct">
+		SELECT
+			<include refid="pdProductColumns"/>,
+			<include refid="pdCategoryColumnsShow"/>,
+			<include refid="pdGroupColumnsShow"/>,
+			<include refid="pdVenderColumnsShow"/>,
+			<include refid="pdHospitalColumns"/>
+		FROM pd_product a
+		<include refid="pdProductJoins"/>
+		<include refid="pdHospitalJoins"/>
+		<include refid="pdCategoryJoinsShow"/>
+		<include refid="pdGroupJoinsShow"/>
+		<include refid="pdVenderJoinsShow"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="name != null and name != ''">
+				AND a.name LIKE  concat('%',#{name},'%')
+			</if>
+			<if test="number != null and number != ''">
+				AND a.number LIKE  concat('%',#{number},'%')
+			</if>
+			<if test="categoryId != null and categoryId != ''">
+				AND a.category_id = #{categoryId}
+			</if>
+			<if test="groupId != null and groupId != ''">
+				AND a.group_id = #{groupId}
+			</if>
+			<if test="venderId != null and venderId != ''">
+				AND a.vender_id = #{venderId}
+			</if>
+			<if test="version != null and version != ''">
+				AND a.version = #{version}
+			</if>
+			<if test="supplierId != null and supplierId != ''">
+				AND a.supplier_id LIKE concat('%',#{supplierId},'%')
+			</if>
+			<if test="chooseFlag == null or chooseFlag == ''">
+				<if test="hospitalNumber != null and hospitalNumber != ''">
+					AND a.hospitalNumber = #{hospitalNumber}
+				</if>
+			</if>
+			<if test="chooseFlag != null and chooseFlag != ''">
+				<if test="hospitalNumber != null and hospitalNumber != ''">
+					AND ( a.hospitalNumber = #{hospitalNumber} or a.hospitalNumber = 'WSYGY')
+				</if>
+			</if>
+            <if test="version != null and version != ''">
+                AND a.version LIKE concat('%',#{version},'%')
+            </if>
+            <if test="spec != null and spec != ''">
+                AND a.spec LIKE concat('%',#{spec},'%')
+            </if>
+			<if test="hospitalName != null and hospitalName != ''">
+				AND h.name LIKE concat('%',#{hospitalName},'%')
+			</if>
+			<if test="productIdList != null and productIdList.size()>0">
+				AND a.id in <foreach collection="productIdList" item="item" open="(" separator="," close=")">#{item}</foreach>
+			</if>
+			<if test="hospitalNumberList != null and hospitalNumberList.size()>0">
+				AND a.hospital_number in <foreach collection="hospitalNumberList" item="item" open="(" separator="," close=")">#{item}</foreach>
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+	<!-- 查询显示优化 2019年5月29日10:03:23 -->
+	<select id="basicFindList" resultType="PdProduct">
+		SELECT
+		<include refid="pdProductColumns"/>,
+		<include refid="pdCategoryColumnsShow"/>,
+		<include refid="pdGroupColumnsShow"/>,
+		<include refid="pdVenderColumnsShow"/>,
+		<include refid="pdHospitalColumns"/>
+		FROM pd_product a
+		<include refid="pdProductJoins"/>
+		<include refid="pdHospitalJoins"/>
+		<include refid="pdCategoryJoinsShow"/>
+		<include refid="pdGroupJoinsShow"/>
+		<include refid="pdVenderJoinsShow"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="name != null and name != ''">
+				AND a.name LIKE
+				<if test="dbName == 'oracle'">'%'||#{name}||'%'</if>
+				<if test="dbName == 'mssql'">'%'+#{name}+'%'</if>
+				<if test="dbName == 'mysql'">concat('%',#{name},'%')</if>
+			</if>
+			<if test="number != null and number != ''">
+				AND a.number = #{number}
+			</if>
+			<if test="categoryId != null and categoryId != ''">
+				AND a.category_id = #{categoryId}
+			</if>
+			<if test="groupId != null and groupId != ''">
+				AND a.group_id = #{groupId}
+			</if>
+			<if test="venderId != null and venderId != ''">
+				AND a.vender_id = #{venderId}
+			</if>
+			<if test="version != null and version != ''">
+				AND a.version = #{version}
+			</if>
+			<if test="supplierId != null and supplierId != ''">
+				AND a.supplier_id LIKE concat('%',#{supplierId},'%')
+			</if>
+			<if test="hospitalNumber != null and hospitalNumber != ''">
+				AND a.hospitalNumber = #{hospitalNumber}
+			</if>
+			<if test="hospitalName != null and hospitalName != ''">
+				AND h.name LIKE concat('%',#{hospitalName},'%')
+			</if>
+			<if test="productIdList != null and productIdList.size()>0">
+				AND a.id in <foreach collection="productIdList" item="item" open="(" separator="," close=")">#{item}</foreach>
+			</if>
+
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="PdProduct">
+		SELECT 
+			<include refid="pdProductColumns"/>
+		FROM pd_product a
+		<include refid="pdProductJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO pd_product(
+			id,
+			number,
+			name,
+			spm,
+			spec,
+			version,
+			unit,
+			group_id,
+			category_id,
+			type,
+			vender_id,
+			supplier_id,
+			pur_price,
+			selling_price,
+			registration,
+			description,
+			img_auth_site,
+			img_auth_num,
+			img_auth_date,
+			img_register1_site,
+			img_register1_num,
+			img_register1_date,
+			img_register2_site,
+			img_register2_num,
+			img_register2_date,
+			img_register3_site,
+			img_register3_num,
+			img_register3_date,
+			img_license1_site,
+			img_license1_num,
+			img_license1_date,
+			img_license2_site,
+			img_license2_num,
+			img_license2_date,
+			img_license3_site,
+			img_license3_num,
+			img_license3_date,
+			img_license4_site,
+			img_license4_num,
+			img_license4_date,
+			img_product_site1,
+			img_product_site2,
+			img_product_site3,
+			del_flag,
+			create_by,
+			update_date,
+			update_by,
+			remarks,
+			create_date,
+			hospital_number
+		) VALUES (
+			#{id},
+			#{number},
+			#{name},
+			#{spm},
+			#{spec},
+			#{version},
+			#{unit},
+			#{groupId},
+			#{categoryId},
+			#{type},
+			#{venderId},
+			#{supplierId},
+			#{purPrice},
+			#{sellingPrice},
+			#{registration},
+			#{description},
+			#{imgAuthSite},
+			#{imgAuthNum},
+			#{imgAuthDate},
+			#{imgRegister1Site},
+			#{imgRegister1Num},
+			#{imgRegister1Date},
+			#{imgRegister2Site},
+			#{imgRegister2Num},
+			#{imgRegister2Date},
+			#{imgRegister3Site},
+			#{imgRegister3Num},
+			#{imgRegister3Date},
+			#{imgLicense1Site},
+			#{imgLicense1Num},
+			#{imgLicense1Date},
+			#{imgLicense2Site},
+			#{imgLicense2Num},
+			#{imgLicense2Date},
+			#{imgLicense3Site},
+			#{imgLicense3Num},
+			#{imgLicense3Date},
+			#{imgLicense4Site},
+			#{imgLicense4Num},
+			#{imgLicense4Date},
+			#{imgProductSite1},
+			#{imgProductSite2},
+			#{imgProductSite3},
+			#{delFlag},
+			#{createBy.id},
+			#{updateDate},
+			#{updateBy.id},
+			#{remarks},
+			#{createDate},
+			#{hospitalNumber}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE pd_product SET 	
+			number = #{number},
+			name = #{name},
+			spm = #{spm},
+			spec = #{spec},
+			version = #{version},
+			unit = #{unit},
+			group_id = #{groupId},
+			category_id = #{categoryId},
+			type = #{type},
+			vender_id = #{venderId},
+			supplier_id = #{supplierId},
+			pur_price = #{purPrice},
+			selling_price = #{sellingPrice},
+			registration = #{registration},
+			description = #{description},
+			img_auth_site = #{imgAuthSite},
+			img_auth_num = #{imgAuthNum},
+			img_auth_date = #{imgAuthDate},
+			img_register1_site = #{imgRegister1Site},
+			img_register1_num = #{imgRegister1Num},
+			img_register1_date = #{imgRegister1Date},
+			img_register2_site = #{imgRegister2Site},
+			img_register2_num = #{imgRegister2Num},
+			img_register2_date = #{imgRegister2Date},
+			img_register3_site = #{imgRegister3Site},
+			img_register3_num = #{imgRegister3Num},
+			img_register3_date = #{imgRegister3Date},
+			img_license1_site = #{imgLicense1Site},
+			img_license1_num = #{imgLicense1Num},
+			img_license1_date = #{imgLicense1Date},
+			img_license2_site = #{imgLicense2Site},
+			img_license2_num = #{imgLicense2Num},
+			img_license2_date = #{imgLicense2Date},
+			img_license3_site = #{imgLicense3Site},
+			img_license3_num = #{imgLicense3Num},
+			img_license3_date = #{imgLicense3Date},
+			img_license4_site = #{imgLicense4Site},
+			img_license4_num = #{imgLicense4Num},
+			img_license4_date = #{imgLicense4Date},
+			img_product_site1 = #{imgProductSite1},
+			img_product_site2 = #{imgProductSite2},
+			img_product_site3 = #{imgProductSite3},
+			update_date = #{updateDate},
+			update_by = #{updateBy.id},
+			remarks = #{remarks},
+			del_flag = #{delFlag},
+			hospital_number = #{hospitalNumber}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE pd_product SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 生产厂家、分类、组别校验 -->
+	<select id="checkCorrelation" resultType="PdProduct">
+		SELECT 
+			<include refid="pdProductColumns"/>
+		FROM pd_product a
+		<include refid="pdProductJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="categoryId != null and categoryId != ''">
+				AND a.category_id = #{categoryId}
+			</if>
+			<if test="groupId != null and groupId != ''">
+				AND a.group_id = #{groupId}
+			</if>
+			<if test="venderId != null and venderId != ''">
+				AND a.vender_id = #{venderId}
+			</if>
+		</where>
+	</select>
+	
+	
+	<insert id="importSave">
+		INSERT INTO pd_product(
+			id,
+			number,
+			name,
+			spm,
+			spec,
+			version,
+			unit,
+			group_id,
+			category_id,
+			type,
+			vender_id,
+			supplier_id,
+			pur_price,
+			selling_price,
+			registration,
+			description,
+			img_auth_site,
+			img_auth_num,
+			img_auth_date,
+			img_register1_site,
+			img_register1_num,
+			img_register1_date,
+			img_register2_site,
+			img_register2_num,
+			img_register2_date,
+			img_register3_site,
+			img_register3_num,
+			img_register3_date,
+			img_license1_site,
+			img_license1_num,
+			img_license1_date,
+			img_license2_site,
+			img_license2_num,
+			img_license2_date,
+			img_license3_site,
+			img_license3_num,
+			img_license3_date,
+			img_license4_site,
+			img_license4_num,
+			img_license4_date,
+			img_product_site1,
+			img_product_site2,
+			img_product_site3,
+			del_flag,
+			create_by,
+			update_date,
+			update_by,
+			remarks,
+			create_date,
+			hospital_number
+		) VALUES
+		<foreach collection="list" separator="," item="item">
+			(
+			#{item.id},
+			#{item.number},
+			#{item.name},
+			#{item.spm},
+			#{item.spec},
+			#{item.version},
+			#{item.unit},
+			#{item.groupId},
+			#{item.categoryId},
+			#{item.type},
+			#{item.venderId},
+			#{item.supplierId},
+			#{item.purPrice},
+			#{item.sellingPrice},
+			#{item.registration},
+			#{item.description},
+			#{item.imgAuthSite},
+			#{item.imgAuthNum},
+			#{item.imgAuthDate},
+			#{item.imgRegister1Site},
+			#{item.imgRegister1Num},
+			#{item.imgRegister1Date},
+			#{item.imgRegister2Site},
+			#{item.imgRegister2Num},
+			#{item.imgRegister2Date},
+			#{item.imgRegister3Site},
+			#{item.imgRegister3Num},
+			#{item.imgRegister3Date},
+			#{item.imgLicense1Site},
+			#{item.imgLicense1Num},
+			#{item.imgLicense1Date},
+			#{item.imgLicense2Site},
+			#{item.imgLicense2Num},
+			#{item.imgLicense2Date},
+			#{item.imgLicense3Site},
+			#{item.imgLicense3Num},
+			#{item.imgLicense3Date},
+			#{item.imgLicense4Site},
+			#{item.imgLicense4Num},
+			#{item.imgLicense4Date},
+			#{item.imgProductSite1},
+			#{item.imgProductSite2},
+			#{item.imgProductSite3},
+			#{item.delFlag},
+			#{item.createBy.id},
+			#{item.updateDate},
+			#{item.updateBy.id},
+			#{item.remarks},
+			#{item.createDate},
+			#{hospitalNumber}
+		)
+		</foreach> 
+		
+	</insert>
+	
+	<!-- 根据产品编号查询产品信息 -->
+	<select id="getByNumber" resultType="PdProduct">
+		SELECT 
+			<include refid="pdProductColumns"/>
+		FROM pd_product a
+		<include refid="pdProductJoins"/>
+		WHERE a.number = #{number}
+	</select>
+	
+</mapper>

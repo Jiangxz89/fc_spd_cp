@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.hys.dao.PdSupplierMidProductDao">
+    
+	<sql id="pdSupplierMidProductColumns">
+		a.id AS "id",
+		a.supplier_id AS "supplierId",
+		a.product_id AS "productId",
+		a.del_flag AS "delFlag",
+		a.create_by AS "createBy.id",
+		a.update_date AS "updateDate",
+		a.update_by AS "updateBy.id",
+		a.remarks AS "remarks",
+		a.create_date AS "createDate"
+	</sql>
+	
+	<!-- 医院字段 -->
+	<sql id="pdProductColumns">
+		h.`name` AS "productName",
+		h.number AS "productNumber"
+	</sql>
+	
+		<!-- 供应商字段 -->
+	<sql id="pdSupplierColumns">
+		s.`name` AS "supplierName",
+		s.number AS "supplierNumber"
+	</sql>
+	
+	<sql id="pdSupplierMidProductJoins">
+	</sql>
+	
+	<!-- 关联医院 -->
+	<sql id="pdProductJoins">
+		LEFT JOIN pd_product h ON a.product_id = h.id
+	</sql>
+	
+	<!-- 关联供应商 -->
+	<sql id="pdSupplierJoins">
+		LEFT JOIN pd_supplier s ON a.supplier_id = s.id
+	</sql>
+	
+    
+	<select id="get" resultType="PdSupplierMidProduct">
+		SELECT 
+			<include refid="pdSupplierMidProductColumns"/>
+		FROM pd_supplier_mid_product a
+		<include refid="pdSupplierMidProductJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="PdSupplierMidProduct">
+		SELECT 
+			<include refid="pdSupplierMidProductColumns"/>
+		FROM pd_supplier_mid_product a
+		<include refid="pdSupplierMidProductJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="supplierId != null and supplierId != ''">
+				AND supplier_id = #{supplierId}
+			</if>
+			<if test="productId != null and productId != ''">
+				AND product_id = #{productId}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="PdSupplierMidProduct">
+		SELECT 
+			<include refid="pdSupplierMidProductColumns"/>
+		FROM pd_supplier_mid_product a
+		<include refid="pdSupplierMidProductJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+	<select id="findMidProductList" resultType="PdSupplierMidProduct">
+		select
+		a.id as "supplierId",
+		a.`name` as "supplierName",
+		b.product_id as "productId"
+		from pd_supplier a
+		left join pd_supplier_mid_product b on a.id = b.supplier_id
+		where
+		b.del_flag = #{DEL_FLAG_NORMAL}
+
+		<if test="supplierName != null and supplierName != ''">
+			AND a.name = #{supplierName}
+		</if>
+		<if test="productId != null and productId != ''">
+			AND b.product_id = #{productId}
+		</if>
+	</select>
+
+	<insert id="insert">
+		INSERT INTO pd_supplier_mid_product(
+			id,
+			supplier_id,
+			product_id,
+			del_flag,
+			create_by,
+			update_date,
+			update_by,
+			remarks,
+			create_date
+		) VALUES (
+			#{id},
+			#{supplierId},
+			#{productId},
+			#{delFlag},
+			#{createBy.id},
+			#{updateDate},
+			#{updateBy.id},
+			#{remarks},
+			#{createDate}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE pd_supplier_mid_product SET
+			supplier_id = #{supplierId},
+			product_id = #{productId},
+			update_date = #{updateDate},
+			update_by = #{updateBy.id},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE pd_supplier_mid_product SET
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="deleteBySupplierId">
+		UPDATE pd_supplier_mid_product SET
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE supplier_id = #{supplierId}
+	</update>
+	
+	<!-- 查询供应商关联的医院(带医院编号) -->
+	<select id="findListData" resultType="PdSupplierMidProduct">
+		SELECT 
+			<include refid="pdSupplierMidProductColumns"/>,
+			<include refid="pdProductColumns"/>,
+			<include refid="pdSupplierColumns"/>
+		FROM pd_supplier_mid_product a
+		<include refid="pdSupplierMidProductJoins"/>
+		<include refid="pdProductJoins"/>
+		<include refid="pdSupplierJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="supplierId != null and supplierId != ''">
+				AND supplier_id = #{supplierId}
+			</if>
+			<if test="productId != null and productId != ''">
+				AND product_id = #{productId}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<!--批量保存供应商关联医院信息-->
+	<insert id="batchSave">
+		INSERT INTO pd_supplier_mid_product(
+			id,
+			supplier_id,
+			product_id,
+			del_flag,
+			create_by,
+			update_date,
+			update_by,
+			remarks,
+			create_date
+		)  VALUES 
+		<foreach collection="list" separator="," item="item">
+			(
+			#{item.id},
+			#{item.supplierId},
+			#{item.productId},
+			#{item.delFlag},
+			#{item.createBy.id},
+			#{item.updateDate},
+			#{item.updateBy.id},
+			#{item.remarks},
+			#{item.createDate}
+		)
+		</foreach>
+	</insert>
+</mapper>

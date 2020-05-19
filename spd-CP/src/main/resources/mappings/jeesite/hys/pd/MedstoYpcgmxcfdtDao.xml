@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.hys.dao.MedstoYpcgmxcfdtDao">
+    
+	<sql id="medstoYpcgmxcfdtColumns">
+		a.xh AS "xh",
+		a.apart_id AS "apartId",
+		a.ypdm AS "ypdm",
+		a.cgsl AS "cgsl",
+		a.ypjj AS "ypjj",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.cgsl * a.ypjj as "ypjjje"
+	</sql>
+	
+	<!-- 药品表字段 -->
+	<sql id="medstoYpcdmlkColumns">
+		lk.ypmc as "ypmc",
+		lk.ypgg as "ypgg",
+		lk.zxdw as "zxdw",
+		lk.cjmc as "cjmc"
+	</sql>
+		
+	<sql id="medstoYpcgmxcfdtJoins">
+	</sql>
+	
+	<!-- 关联药品表 -->
+	<sql id="medstoYpcdmlkJoins">
+		LEFT JOIN medsto_ypcdmlk lk on a.ypdm = lk.ypdm
+	</sql>
+    
+	<select id="get" resultType="MedstoYpcgmxcfdt">
+		SELECT 
+			<include refid="medstoYpcgmxcfdtColumns"/>
+		FROM medsto_ypcgmxcfdt a
+		<include refid="medstoYpcgmxcfdtJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="MedstoYpcgmxcfdt">
+		SELECT 
+			<include refid="medstoYpcgmxcfdtColumns"/>,
+			<include refid="medstoYpcdmlkColumns"/>
+		FROM medsto_ypcgmxcfdt a
+		<include refid="medstoYpcgmxcfdtJoins"/>
+		<include refid="medstoYpcdmlkJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="apartId != null and apartId != ''">
+				AND a.apart_id = #{apartId}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="MedstoYpcgmxcfdt">
+		SELECT 
+			<include refid="medstoYpcgmxcfdtColumns"/>
+		FROM medsto_ypcgmxcfdt a
+		<include refid="medstoYpcgmxcfdtJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO medsto_ypcgmxcfdt(
+			xh,
+			apart_id,
+			ypdm,
+			cgsl,
+			ypjj,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{xh},
+			#{apartId},
+			#{ypdm},
+			#{cgsl},
+			#{ypjj},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE medsto_ypcgmxcfdt SET 	
+			xh = #{xh},
+			apart_id = #{apartId},
+			ypdm = #{ypdm},
+			cgsl = #{cgsl},
+			ypjj = #{ypjj},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE medsto_ypcgmxcfdt SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+		<!--批量添加药品订单拆分关联药品-->
+	<insert id="batchSave">
+		INSERT INTO medsto_ypcgmxcfdt(
+			xh,
+			apart_id,
+			ypdm,
+			cgsl,
+			ypjj,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		)  VALUES 
+		<foreach collection="list" separator="," item="item">
+			(
+			#{item.xh},
+			#{item.apartId},
+			#{item.ypdm},
+			#{item.cgsl},
+			#{item.ypjj},
+			#{item.createBy.id},
+			#{item.createDate},
+			#{item.updateBy.id},
+			#{item.updateDate},
+			#{item.remarks},
+			#{item.delFlag}
+		)
+		</foreach>
+	</insert>
+	
+</mapper>

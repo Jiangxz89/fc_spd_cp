@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.hys.dao.PdConsumablesApartRelevanceDao">
+    
+	<sql id="pdConsumablesApartRelevanceColumns">
+		a.id AS "id",
+		a.apart_id AS "apartId",
+		a.consumables_number AS "consumablesNumber",
+		a.order_quantity AS "orderQuantity",
+		a.price AS "price",
+		a.amount AS "amount",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<!-- 耗材表字段 -->
+	<sql id="pdProductColumns">
+		p.`name` AS "name",
+		p.spec AS "spec",
+		p.unit AS "unit"
+	</sql>
+	
+	<!-- 生产厂家表字段 -->
+	<sql id="pdVenderColumns">
+		v.`name` AS "venderName"
+	</sql>
+	
+		<!-- 耗材表 -->
+	<sql id="pdProductJoins">
+		LEFT JOIN pd_product p ON a.consumables_number = p.number
+	</sql>
+    
+    <!-- 生产厂家表 -->
+	<sql id="pdVenderJoins">
+		LEFT JOIN pd_vender v ON p.vender_id = v.id
+	</sql>
+	
+	<sql id="pdConsumablesApartRelevanceJoins">
+	</sql>
+    
+	<select id="get" resultType="PdConsumablesApartRelevance">
+		SELECT 
+			<include refid="pdConsumablesApartRelevanceColumns"/>
+		FROM pd_consumables_apart_relevance a
+		<include refid="pdConsumablesApartRelevanceJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="PdConsumablesApartRelevance">
+		SELECT 
+			<include refid="pdConsumablesApartRelevanceColumns"/>,
+			<include refid="pdProductColumns"/>,
+			<include refid="pdVenderColumns"/>
+		FROM pd_consumables_apart_relevance a
+		<include refid="pdConsumablesApartRelevanceJoins"/>
+		<include refid="pdProductJoins"/>
+		<include refid="pdVenderJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="apartId != null and apartId != ''">
+				AND a.apart_id = #{apartId}
+			</if>
+			<if test="hospital != null and hospital != ''">
+				AND p.hospital_number = #{hospital}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="PdConsumablesApartRelevance">
+		SELECT 
+			<include refid="pdConsumablesApartRelevanceColumns"/>
+		FROM pd_consumables_apart_relevance a
+		<include refid="pdConsumablesApartRelevanceJoins"/>
+		<where>
+			
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO pd_consumables_apart_relevance(
+			id,
+			apart_id,
+			consumables_number,
+			order_quantity,
+			price,
+			amount,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{apartId},
+			#{consumablesNumber},
+			#{orderQuantity},
+			#{price},
+			#{amount},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE pd_consumables_apart_relevance SET 	
+			apart_id = #{apartId},
+			consumables_number = #{consumablesNumber},
+			order_quantity = #{orderQuantity},
+			price = #{price},
+			amount = #{amount},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		DELETE FROM pd_consumables_apart_relevance
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--批量添加耗材订单拆分关联耗材-->
+	<insert id="batchSave">
+		INSERT INTO pd_consumables_apart_relevance(
+			id,
+			apart_id,
+			consumables_number,
+			order_quantity,
+			price,
+			amount,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		)  VALUES 
+		<foreach collection="list" separator="," item="item">
+			(
+			#{item.id},
+			#{item.apartId},
+			#{item.consumablesNumber},
+			#{item.orderQuantity},
+			#{item.price},
+			#{item.amount},
+			#{item.createBy.id},
+			#{item.createDate},
+			#{item.updateBy.id},
+			#{item.updateDate},
+			#{item.remarks},
+			#{item.delFlag}
+		)
+		</foreach>
+	</insert>
+</mapper>

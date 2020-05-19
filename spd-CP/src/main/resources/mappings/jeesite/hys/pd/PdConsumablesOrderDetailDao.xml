@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.hys.dao.PdConsumablesOrderDetailDao">
+    
+	<sql id="pdConsumablesOrderDetailColumns">
+		a.id AS "id",
+		a.order_id AS "orderId",
+		a.number AS "number",
+		a.supplier_name AS "supplierName",
+		a.order_quantity AS "orderQuantity",
+		a.price AS "price",
+		a.amount AS "amount",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<!-- 耗材表字段 -->
+	<sql id="pdProductColumns">
+		p.`name` AS "name",
+		p.spec AS "spec",
+		p.unit AS "unit"
+	</sql>
+	
+	<!-- 生产厂家表字段 -->
+	<sql id="pdVenderColumns">
+		v.`name` AS "venderName"
+	</sql>
+	
+	<sql id="pdConsumablesOrderDetailJoins">
+	</sql>
+	
+	<!-- 耗材订单表 -->
+	<sql id="pdConsumablesOrderJoins">
+		LEFT JOIN pd_consumables_order co ON co.id = a.order_id
+		
+	</sql>
+	
+	<!-- 耗材表 -->
+	<sql id="pdProductJoins">
+		LEFT JOIN pd_product p ON a.number = p.number
+	</sql>
+    
+    <!-- 生产厂家表 -->
+	<sql id="pdVenderJoins">
+		LEFT JOIN pd_vender v ON p.vender_id = v.id
+	</sql>
+    
+	<select id="get" resultType="PdConsumablesOrderDetail">
+		SELECT 
+			<include refid="pdConsumablesOrderDetailColumns"/>
+		FROM pd_consumables_order_detail a
+		<include refid="pdConsumablesOrderDetailJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="PdConsumablesOrderDetail">
+		SELECT 
+			<include refid="pdConsumablesOrderDetailColumns"/>,
+			<include refid="pdProductColumns"/>,
+			<include refid="pdVenderColumns"/>
+		FROM pd_consumables_order_detail a
+		<include refid="pdConsumablesOrderDetailJoins"/>
+		<include refid="pdProductJoins"/>
+		<include refid="pdVenderJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="orderId != null and orderId != ''">
+				AND a.order_id = #{orderId}
+			</if>
+			<if test="number != null and number != ''">
+				AND a.number = #{number}
+			</if>
+			<if test="hospital != null and hospital != ''">
+				AND p.hospital_number = #{hospital}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="PdConsumablesOrderDetail">
+		SELECT 
+			<include refid="pdConsumablesOrderDetailColumns"/>
+		FROM pd_consumables_order_detail a
+		<include refid="pdConsumablesOrderDetailJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO pd_consumables_order_detail(
+			id,
+			order_id,
+			number,
+			supplier_name,
+			order_quantity,
+			price,
+			amount,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{orderId},
+			#{number},
+			#{supplierName},
+			#{orderQuantity},
+			#{price},
+			#{amount},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE pd_consumables_order_detail SET 	
+			order_id = #{orderId},
+			number = #{number},
+			supplier_name = #{supplierName},
+			order_quantity = #{orderQuantity},
+			price = #{price},
+			amount = #{amount},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE pd_consumables_order_detail SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<!--批量保存耗材订单详情-->
+	<insert id="batchSave">
+		INSERT INTO pd_consumables_order_detail(
+			id,
+			order_id,
+			number,
+			supplier_name,
+			order_quantity,
+			price,
+			amount,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		)  VALUES 
+		<foreach collection="list" separator="," item="item">
+			(
+			#{item.id},
+			#{item.orderId},
+			#{item.number},
+			#{item.supplierName},
+			#{item.orderQuantity},
+			#{item.price},
+			#{item.amount},
+			#{item.createBy.id},
+			#{item.createDate},
+			#{item.updateBy.id},
+			#{item.updateDate},
+			#{item.remarks},
+			#{item.delFlag}
+		)
+		</foreach>
+	</insert>
+	
+	<select id="findOrderKindSize" resultType = "java.lang.Integer">
+		SELECT 
+			COUNT(*)
+		FROM pd_consumables_order_detail a
+		<include refid="pdConsumablesOrderDetailJoins"/>
+		<include refid="pdConsumablesOrderJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="number != null and number != ''">
+				AND co.number = #{number}
+			</if>
+			<if test="startDate != null and startDate != '' and endDate != null and endDate != ''">
+		 		AND co.order_date between #{startDate} and #{endDate}
+		 	</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+</mapper>

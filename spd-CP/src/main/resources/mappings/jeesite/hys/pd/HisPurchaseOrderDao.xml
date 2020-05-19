@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.hys.dao.HisPurchaseOrderDao">
+    
+	<sql id="hisPurchaseOrderColumns">
+		a.id AS "id",
+		a.jgbm AS "jgbm",
+		a.pur_no AS "purNo",
+		a.pur_date AS "purDate",
+		a.oper_name AS "operName",
+		a.check_name AS "checkName",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.hospital_number AS "hospitalNumber"
+	</sql>
+	<!-- 医院表字段 -->
+	<sql id="pdHospitalColumns">
+		h.name AS "hospitalName"
+	</sql>
+
+	<sql id="hisPurchaseOrderJoins">
+	</sql>
+	<!-- 医院表 -->
+	<sql id="pdHospitalJoins">
+		LEFT JOIN pd_hospital h ON a.hospital_number = h.number
+	</sql>
+
+	<sql id="hisPurchaseOrderItemJoins">
+		LEFT JOIN his_purchase_order_item b ON a.id = b.p_id
+	</sql>
+
+	<select id="get" resultType="HisPurchaseOrder">
+		SELECT 
+			<include refid="hisPurchaseOrderColumns"/>
+		FROM his_purchase_order a
+		<include refid="hisPurchaseOrderJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="HisPurchaseOrder">
+		SELECT 
+			<include refid="hisPurchaseOrderColumns"/> ,
+			<include refid="pdHospitalColumns"/>
+		FROM his_purchase_order a
+		<include refid="hisPurchaseOrderJoins"/>
+		<include refid="pdHospitalJoins"/>
+		<if test="producerName != null and producerName != ''">
+			<include refid="hisPurchaseOrderItemJoins"/>
+		</if>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="id != null and id != ''">
+				AND a.id = #{id}
+			</if>
+			<if test="jgbm != null and jgbm != ''">
+				AND a.jgbm like concat('%',#{jgbm},'%')
+			</if>
+			<if test="purNo != null and purNo != ''">
+				AND a.pur_no like concat('%',#{purNo},'%')
+			</if>
+			<if test="producerName != null and producerName != ''">
+				AND b.producer_name = #{producerName}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY a.${page.orderBy} desc
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="HisPurchaseOrder">
+		SELECT 
+			<include refid="hisPurchaseOrderColumns"/>
+		FROM his_purchase_order a
+		<include refid="hisPurchaseOrderJoins"/>
+		<where>
+			
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+	</select>
+
+	<insert id="insert">
+		INSERT INTO his_purchase_order(
+			id,
+			jgbm,
+			pur_no,
+			pur_date,
+			oper_name,
+			check_name,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			hospital_number
+		) VALUES (
+			#{id},
+			#{jgbm},
+			#{purNo},
+			#{purDate},
+			#{operName},
+			#{checkName},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{hospitalNumber}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE his_purchase_order SET 	
+			jgbm = #{jgbm},
+			pur_no = #{purNo},
+			pur_date = #{purDate},
+			oper_name = #{operName},
+			check_name = #{checkName},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks},
+			hospital_number = #{hospitalNumber}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE his_purchase_order SET
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+</mapper>

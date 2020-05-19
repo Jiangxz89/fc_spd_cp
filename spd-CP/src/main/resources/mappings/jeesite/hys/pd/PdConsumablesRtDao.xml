@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.hys.dao.PdConsumablesRtDao">
+    
+	<sql id="pdConsumablesRtColumns">
+		a.id AS "id",
+		a.rt_date AS "rtDate",
+		a.number AS "number",
+		a.rt_number AS "rtNumber",
+		a.product_number AS "productNumber",
+		a.order_quantity AS "orderQuantity",
+		a.rt_quantity AS "rtQuantity",
+		a.price AS "price",
+		a.amount AS "amount",
+		a.hospital AS "hospital",
+		a.supplier_name AS "supplierName",
+		a.sync_date AS "syncDate",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+		<!-- 医院表字段 -->
+	<sql id="pdHospitalColumns">
+		h.name AS "hospitalName"
+	</sql>
+	
+	<!-- 耗材信息表字段 -->
+	<sql id="pdProductColumns">
+		p.`name` AS "productName",
+		p.spec AS "spec",
+		p.unit AS "unit"
+	</sql>
+	
+	<!-- 生产厂家表字段 -->
+	<sql id="pdVenderColumns">
+		v.`name` AS "manufacturer"
+	</sql>
+	
+	<sql id="pdConsumablesRtJoins">
+	</sql>
+	
+	<!-- 耗材信息表 -->
+	<sql id="pdProductJoins">
+		LEFT JOIN pd_product p on a.product_number = p.number  and a.hospital = p.hospital_number
+	</sql>
+	
+	<!-- 生产厂家表 -->
+	<sql id="pdVenderJoins">
+		LEFT JOIN pd_vender v ON p.vender_id = v.id
+	</sql>
+	
+	<!-- 医院表 -->
+	<sql id="pdHospitalJoins">
+		LEFT JOIN pd_hospital h ON a.hospital = h.number
+	</sql>
+    
+	<select id="get" resultType="PdConsumablesRt">
+		SELECT 
+			<include refid="pdConsumablesRtColumns"/>
+		FROM pd_consumables_rt a
+		<include refid="pdConsumablesRtJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="PdConsumablesRt">
+		SELECT 
+			<include refid="pdConsumablesRtColumns"/>,
+			<include refid="pdProductColumns"/>,
+			<include refid="pdVenderColumns"/>,
+			<include refid="pdHospitalColumns"/>
+		FROM pd_consumables_rt a
+		<include refid="pdConsumablesRtJoins"/>
+		<include refid="pdProductJoins"/>
+		<include refid="pdVenderJoins"/>
+		<include refid="pdHospitalJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="queryDate != null and queryDate != ''">
+				AND DATE_FORMAT(a.rt_date,'%Y-%m-%d') = DATE_FORMAT( #{queryDate}, '%Y-%m-%d')
+			</if>
+			<if test="number != null and number != ''">
+				AND a.number = #{number}
+			</if>
+			<if test="rtNumber != null and rtNumber != ''">
+				AND a.rt_number = #{rtNumber}
+			</if>
+			<if test="productName != null and productName != ''">
+				AND p.name = #{productName}
+			</if>
+			<if test="productNumber != null and productNumber != ''">
+				AND a.product_number = #{productNumber}
+			</if>
+			<if test="manufacturer != null and manufacturer != ''">
+				AND v.name = #{manufacturer}
+			</if>
+			<if test="syncDate != null and syncDate != ''">
+				AND DATE_FORMAT(a.sync_date,'%Y-%m-%d') = DATE_FORMAT( #{syncDate}, '%Y-%m-%d')
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="PdConsumablesRt">
+		SELECT 
+			<include refid="pdConsumablesRtColumns"/>
+		FROM pd_consumables_rt a
+		<include refid="pdConsumablesRtJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO pd_consumables_rt(
+			id,
+			rt_date,
+			number,
+			rt_number,
+			product_number,
+			order_quantity,
+			rt_quantity,
+			price,
+			amount,
+			hospital,
+			supplier_name,
+			sync_date,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{id},
+			#{rtDate},
+			#{number},
+			#{rtNumber},
+			#{productNumber},
+			#{orderQuantity},
+			#{rtQuantity},
+			#{price},
+			#{amount},
+			#{hospital},
+			#{supplierName},
+			#{syncDate},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE pd_consumables_rt SET 	
+			rt_date = #{rtDate},
+			number = #{number},
+			rt_number = #{rtNumber},
+			product_number = #{productNumber},
+			order_quantity = #{orderQuantity},
+			rt_quantity = #{rtQuantity},
+			price = #{price},
+			amount = #{amount},
+			hospital = #{hospital},
+			supplier_name = #{supplierName},
+			sync_date = #{syncDate},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE pd_consumables_rt SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<insert id="batchSave">
+		INSERT INTO pd_consumables_rt(
+			id,
+			rt_date,
+			number,
+			rt_number,
+			product_number,
+			order_quantity,
+			rt_quantity,
+			price,
+			amount,
+			hospital,
+			supplier_name,
+			sync_date,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		)  VALUES 
+		<foreach collection="list" separator="," item="item">
+			(
+			#{item.id},
+			#{item.rtDate},
+			#{item.number},
+			#{item.rtNumber},
+			#{item.productNumber},
+			#{item.orderQuantity},
+			#{item.rtQuantity},
+			#{item.price},
+			#{item.amount},
+			#{item.hospital},
+			#{item.supplierName},
+			#{item.syncDate},
+			#{item.createBy.id},
+			#{item.createDate},
+			#{item.updateBy.id},
+			#{item.updateDate},
+			#{item.remarks},
+			#{item.delFlag}
+		)
+		</foreach>
+	</insert>
+	
+</mapper>

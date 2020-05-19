@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.hys.dao.MedstoYpcgmxcfDao">
+    
+	<sql id="medstoYpcgmxcfColumns">
+		a.xh AS "xh",
+		a.djh AS "djh",
+		a.order_quantity AS "orderQuantity",
+		a.order_amount AS "orderAmount",
+		a.supplier_id AS "supplierId",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="medstoYpcgmxcfJoins">
+	</sql>
+	
+	<!-- 供应商字段 -->
+	<sql id="pdSupplierColumns">
+		p.name as supplierName
+	</sql>
+	
+	<!-- 订单表字段 -->
+	<sql id="medstoYpcgzdColumns">
+		zd.cjrq AS "cjrq",
+		zd.hospital_name as "hospitalName",
+		zd.hospital_code as "hospitalCode",
+		zd.jlzt as "jlzt"
+	</sql>
+	<!-- 关联供应商 -->
+	<sql id="pdSupplierJoins">
+		left join pd_supplier p on a.supplier_id = p.id
+	</sql>
+	<!-- 关联订单表 -->
+	<sql id="medstoYpcgzdJoins">
+		LEFT JOIN medsto_ypcgzd zd on  a.djh = zd.djh
+	</sql>
+    
+	<select id="get" resultType="MedstoYpcgmxcf">
+		SELECT 
+			<include refid="medstoYpcgmxcfColumns"/>
+		FROM medsto_ypcgmxcf a
+		<include refid="medstoYpcgmxcfJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<!-- 获取详情 -->
+	<select id="getOne" resultType="MedstoYpcgmxcf">
+		SELECT 
+			<include refid="medstoYpcgmxcfColumns"/>,
+			<include refid="medstoYpcgzdColumns"/>,
+			<include refid="pdSupplierColumns"/>
+		FROM medsto_ypcgmxcf a
+		<include refid="medstoYpcgmxcfJoins"/>
+		<include refid="medstoYpcgzdJoins"/>
+		<include refid="pdSupplierJoins"/>
+		WHERE a.xh = #{xh}
+	</select>
+	
+	<select id="findList" resultType="MedstoYpcgmxcf">
+		SELECT 
+			<include refid="medstoYpcgmxcfColumns"/>,
+			<include refid="medstoYpcgzdColumns"/>,
+			<include refid="pdSupplierColumns"/>
+		FROM medsto_ypcgmxcf a
+		<include refid="medstoYpcgmxcfJoins"/>
+		<include refid="medstoYpcgzdJoins"/>
+		<include refid="pdSupplierJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="djh != null and djh != ''">
+				AND a.djh = #{djh}
+			</if>
+			<if test="supplierId != null and supplierId != ''">
+				AND a.supplier_id = #{supplierId}
+			</if>
+			<if test="queryDate != null and queryDate != ''">
+				AND zd.cjrq = #{queryDate}
+			</if>
+			<if test="jlzt != null and jlzt != ''">
+				AND zd.jlzt = #{jlzt}
+			</if>
+			<if test="hospitalCode != null and hospitalCode != ''">
+				AND zd.hospital_code = #{hospitalCode}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="MedstoYpcgmxcf">
+		SELECT 
+			<include refid="medstoYpcgmxcfColumns"/>
+		FROM medsto_ypcgmxcf a
+		<include refid="medstoYpcgmxcfJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO medsto_ypcgmxcf(
+			xh,
+			djh,
+			order_quantity,
+			order_amount,
+			supplier_id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		) VALUES (
+			#{xh},
+			#{djh},
+			#{orderQuantity},
+			#{orderAmount},
+			#{supplierId},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE medsto_ypcgmxcf SET 	
+			xh = #{xh},
+			djh = #{djh},
+			order_quantity = #{orderQuantity},
+			order_amount = #{orderAmount},
+			supplier_id = #{supplierId},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE medsto_ypcgmxcf SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<!--批量保存药品订单详情-->
+	<insert id="batchSave">
+		INSERT INTO medsto_ypcgmxcf(
+			xh,
+			djh,
+			order_quantity,
+			order_amount,
+			supplier_id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag
+		)  VALUES 
+		<foreach collection="list" separator="," item="item">
+			(
+			#{item.xh},
+			#{item.djh},
+			#{item.orderQuantity},
+			#{item.orderAmount},
+			#{item.supplierId},
+			#{item.createBy.id},
+			#{item.createDate},
+			#{item.updateBy.id},
+			#{item.updateDate},
+			#{item.remarks},
+			#{item.delFlag}
+		)
+		</foreach>
+	</insert>
+	
+</mapper>

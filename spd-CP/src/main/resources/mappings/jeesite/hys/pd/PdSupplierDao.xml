@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.hys.dao.PdSupplierDao">
+    
+	<sql id="pdSupplierColumns">
+		a.id AS "id",
+		a.number AS "number",
+		a.name AS "name",
+		a.account AS "account",
+		a.code AS "code",
+		a.person AS "person",
+		a.tel AS "tel",
+		a.mail AS "mail",
+		a.address AS "address",
+		a.del_flag AS "delFlag",
+		a.create_by AS "createBy.id",
+		a.update_date AS "updateDate",
+		a.update_by AS "updateBy.id",
+		a.remarks AS "remarks",
+		a.create_date AS "createDate"
+	</sql>
+	
+	<sql id="pdSupplierJoins">
+	</sql>
+
+	<!-- 供应商医院关联表 -->
+	<sql id="pdSupplierMidHospitalJoins">
+		LEFT JOIN pd_supplier_mid_hospital b on a.id = b.supplier_id
+	</sql>
+	<!-- 医院表 -->
+	<sql id="pdHospitalJoins">
+		LEFT JOIN pd_hospital c on b.hospital_id = c.id
+	</sql>
+
+	<select id="get" resultType="PdSupplier">
+		SELECT 
+			<include refid="pdSupplierColumns"/>
+		FROM pd_supplier a
+		<include refid="pdSupplierJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="getByName" resultType="PdSupplier">
+		SELECT 
+			<include refid="pdSupplierColumns"/>
+		FROM pd_supplier a
+		<include refid="pdSupplierJoins"/>
+		<include refid="pdSupplierMidHospitalJoins"/>
+		<include refid="pdHospitalJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL} AND b.del_flag = #{DEL_FLAG_NORMAL} AND a.name = #{name} AND c.number =  #{hospital}
+		</where>
+	</select>
+	
+	<select id="findList" resultType="PdSupplier">
+		SELECT 
+			<include refid="pdSupplierColumns"/>
+		FROM pd_supplier a
+		<include refid="pdSupplierJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="name != null and name != ''">
+				AND a.name LIKE 
+					<if test="dbName == 'oracle'">'%'||#{name}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{name}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{name},'%')</if>
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="PdSupplier">
+		SELECT 
+			<include refid="pdSupplierColumns"/>
+		FROM pd_supplier a
+		<include refid="pdSupplierJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+
+	<insert id="insert">
+		INSERT INTO pd_supplier(
+			id,
+			number,
+			name,
+			account,
+			code,
+			person,
+			tel,
+			mail,
+			address,
+			del_flag,
+			create_by,
+			update_date,
+			update_by,
+			remarks,
+			create_date
+		) VALUES (
+			#{id},
+			#{number},
+			#{name},
+			#{account},
+			#{code},
+			#{person},
+			#{tel},
+			#{mail},
+			#{address},
+			#{delFlag},
+			#{createBy.id},
+			#{updateDate},
+			#{updateBy.id},
+			#{remarks},
+			#{createDate}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE pd_supplier SET 	
+			number = #{number},
+			name = #{name},
+			account = #{account},
+			person = #{person},
+			tel = #{tel},
+			mail = #{mail},
+			address = #{address},
+			update_date = #{updateDate},
+			update_by = #{updateBy.id},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE pd_supplier SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<!-- 根据名臣校验供应商是否已存在 -->
+	<select id="verify" resultType="PdSupplier">
+		SELECT 
+			<include refid="pdSupplierColumns"/>
+		FROM pd_supplier a
+		<include refid="pdSupplierJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			and a.name = #{name}
+			<if test="id != null and id != ''">
+				AND a.id != #{id}
+			</if>
+		</where>
+	</select>
+	
+	<!-- 根据账号查询供应商信息 -->
+	<select id="findByAccount" resultType="PdSupplier">
+		SELECT 
+			<include refid="pdSupplierColumns"/>
+		FROM pd_supplier a
+		<include refid="pdSupplierJoins"/>
+		WHERE a.del_flag = #{DEL_FLAG_NORMAL} and a.account = #{loginName}
+	</select>
+	
+	<insert id="saveBatchPdSupplier">
+		INSERT INTO pd_supplier(
+			id,
+			number,
+			name,
+			account,
+			code,
+			person,
+			tel,
+			mail,
+			address,
+			del_flag,
+			create_by,
+			update_date,
+			update_by,
+			remarks,
+			create_date
+		) VALUES (
+			#{id},
+			#{number},
+			#{name},
+			#{account},
+			#{code},
+			#{person},
+			#{tel},
+			#{mail},
+			#{address},
+			#{delFlag},
+			#{createBy.id},
+			#{updateDate},
+			#{updateBy.id},
+			#{remarks},
+			#{createDate}
+		)
+	
+	</insert>
+	
+	
+</mapper>

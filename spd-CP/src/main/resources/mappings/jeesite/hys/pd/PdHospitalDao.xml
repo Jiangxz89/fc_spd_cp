@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.hys.dao.PdHospitalDao">
+    
+	<sql id="pdHospitalColumns">
+		a.id AS "id",
+		a.number AS "number",
+		a.name AS "name",
+		a.area_country AS "areaCountry",
+		a.area_province AS "areaProvince",
+		a.area_city AS "areaCity",
+		a.area_town AS "areaTown",
+		a.address AS "address",
+		a.person AS "person",
+		a.tel AS "tel",
+		a.mail AS "mail",
+		a.del_flag AS "delFlag",
+		a.create_by AS "createBy.id",
+		a.update_date AS "updateDate",
+		a.update_by AS "updateBy.id",
+		a.remarks AS "remarks",
+		a.create_date AS "createDate"
+	</sql>
+	
+	<!-- 关联代码字段 -->
+	<sql id="pdMidColumns">
+		m.mid_code AS "midCode"
+	</sql>
+	
+	<sql id="pdHospitalJoins">
+	</sql>
+	
+	<!-- 中间表 -->
+	<sql id="pdMidJoins">
+		LEFT JOIN pd_supplier_mid_hospital m ON a.id = m.hospital_id
+	</sql>
+    
+	<select id="get" resultType="PdHospital">
+		SELECT 
+			<include refid="pdHospitalColumns"/>
+		FROM pd_hospital a
+		<include refid="pdHospitalJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="getOne" resultType="PdHospital">
+		SELECT 
+			<include refid="pdHospitalColumns"/>,
+			<include refid="pdMidColumns"/>
+		FROM pd_hospital a
+		<include refid="pdHospitalJoins"/>
+		<include refid="pdMidJoins"/>
+		<where>
+			a.id = #{id}
+			<if test="midId != null and midId != ''">
+				AND m.id = #{midId}
+			</if>
+		</where> 
+	</select>
+	
+	<select id="findList" resultType="PdHospital">
+		SELECT 
+			<include refid="pdHospitalColumns"/>
+		FROM pd_hospital a
+		<include refid="pdHospitalJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="name != null and name != ''">
+				AND a.name LIKE 
+					<if test="dbName == 'oracle'">'%'||#{name}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{name}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{name},'%')</if>
+			</if>
+			<if test="number != null and number != ''">
+				AND a.number = #{number}
+			</if>
+			<if test="areaProvince != null and areaProvince != ''">
+				AND a.area_province = #{areaProvince}
+			</if>
+			<if test="areaCity != null and areaCity != ''">
+				AND a.area_city = #{areaCity}
+			</if>
+			<if test="areaTown != null and areaTown != ''">
+				AND a.area_town = #{areaTown}
+			</if>
+			
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="PdHospital">
+		SELECT 
+			<include refid="pdHospitalColumns"/>
+		FROM pd_hospital a
+		<include refid="pdHospitalJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO pd_hospital(
+			id,
+			number,
+			name,
+			area_country,
+			area_province,
+			area_city,
+			area_town,
+			address,
+			person,
+			tel,
+			mail,
+			del_flag,
+			create_by,
+			update_date,
+			update_by,
+			remarks,
+			create_date
+		) VALUES (
+			#{id},
+			#{number},
+			#{name},
+			#{areaCountry},
+			#{areaProvince},
+			#{areaCity},
+			#{areaTown},
+			#{address},
+			#{person},
+			#{tel},
+			#{mail},
+			#{delFlag},
+			#{createBy.id},
+			#{updateDate},
+			#{updateBy.id},
+			#{remarks},
+			#{createDate}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE pd_hospital SET 	
+			number = #{number},
+			name = #{name},
+			area_country = #{areaCountry},
+			area_province = #{areaProvince},
+			area_city = #{areaCity},
+			area_town = #{areaTown},
+			address = #{address},
+			person = #{person},
+			tel = #{tel},
+			mail = #{mail},
+			update_date = #{updateDate},
+			update_by = #{updateBy.id},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE pd_hospital SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<!-- 校验医院编号和名称是否存在 -->
+	<select id="verify" resultType="PdHospital">
+		SELECT 
+			<include refid="pdHospitalColumns"/>
+		FROM pd_hospital a
+		<include refid="pdHospitalJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="number != null and number != ''">
+				AND a.number = #{number}
+			</if>
+			<if test="name != null and name != ''">
+				AND a.name = #{name}
+			</if>
+			<if test="id != null and id != ''">
+				AND a.id != #{id}
+			</if>
+		</where>
+	</select>
+	
+	<!-- 区域采购金额情况分析 -->
+	<select id="findCgAmountSituation" resultType="PdHospital">
+		SELECT
+			a.*, ifnull(sum(co.order_amount), 0) AS totalAmount,
+			ifnull(ho.size, 0) AS speciesSize
+		FROM
+			`pd_hospital` a
+		LEFT JOIN pd_consumables_order co ON a.number = co.hospital
+		LEFT JOIN (
+			SELECT
+				bb.hospital,
+				COUNT(bb.product_number) AS size
+			FROM
+				(
+					SELECT
+						co.*, cod.number AS product_number
+					FROM
+						pd_consumables_order co
+					LEFT JOIN pd_consumables_order_detail cod ON co.id = cod.order_id
+					GROUP BY
+						co.hospital,
+						cod.number
+				) bb
+			GROUP BY
+				bb.hospital
+		) ho ON a.number = ho.hospital
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="areaProvince != null and areaProvince != ''">
+				AND a.area_province = #{areaProvince}
+			</if>
+			<if test="areaCity != null and areaCity != ''">
+				AND a.area_city = #{areaCity}
+			</if>
+			<if test="areaTown != null and areaTown != ''">
+				AND a.area_town = #{areaTown}
+			</if>
+			<if test="startDate != null and startDate != '' and endDate != null and endDate != ''">
+				AND co.order_date between #{startDate} and #{endDate}			 	
+			 </if>
+		</where>
+		GROUP BY
+			a.number
+	</select>
+	
+	
+	
+</mapper>

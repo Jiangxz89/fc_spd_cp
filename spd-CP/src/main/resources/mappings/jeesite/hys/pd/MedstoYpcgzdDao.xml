@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.hys.dao.MedstoYpcgzdDao">
+    
+	<sql id="medstoYpcgzdColumns">
+		a.xh AS "xh",
+		a.czyh AS "czyh",
+		a.cjrq AS "cjrq",
+		a.djh AS "djh",
+		a.ksdm AS "ksdm",
+		a.shry AS "shry",
+		a.shrq AS "shrq",
+		a.jlzt AS "jlzt",
+		a.jzbz AS "jzbz",
+		a.memo AS "memo",
+		a.jjje AS "jjje",
+		a.lsje AS "lsje",
+		a.pfje AS "pfje",
+		a.tsypglbz AS "tsypglbz",
+		a.del_flag AS "delFlag",
+		a.create_by AS "createBy.id",
+		a.update_date AS "updateDate",
+		a.update_by AS "updateBy.id",
+		a.remarks AS "remarks",
+		a.create_date AS "createDate",
+		a.hospital_code AS "hospitalCode",
+		a.hospital_name AS "hospitalName",
+		a.refuse_reason AS "refuseReason"
+	</sql>
+	
+	<!-- 列 -->
+	<sql id="showDetailColumn">
+		b.dhl AS "dhl"
+	</sql>
+	
+	<!-- 连表 -->
+	<sql id="joinDetailTableSql">
+		LEFT JOIN (select cgxh, sum(cgsl) as "dhl"  
+				   from medsto_ypcgmx 
+				   where 1=1 
+				   <if test="ghdwMc != null and ghdwMc != ''">
+				   	and ghdw_mc = #{ghdwMc}
+				   </if> GROUP BY cgxh) b ON a.xh = b.cgxh
+	</sql>
+	
+	<sql id="medstoYpcgzdJoins">
+	</sql>
+    
+	<select id="get" resultType="MedstoYpcgzd">
+		SELECT 
+			<include refid="medstoYpcgzdColumns"/>
+		FROM medsto_ypcgzd a
+		<include refid="medstoYpcgzdJoins"/>
+		WHERE a.xh = #{id}
+	</select>
+	
+	<select id="getOne" resultType="MedstoYpcgzd">
+		SELECT 
+			<include refid="medstoYpcgzdColumns"/>
+		FROM medsto_ypcgzd a
+		<include refid="medstoYpcgzdJoins"/>
+		WHERE a.xh = #{xh}
+	</select>
+	
+	<select id="findList" resultType="MedstoYpcgzd">
+		SELECT 
+			<include refid="medstoYpcgzdColumns"/>,
+			<include refid="showDetailColumn"/>
+		FROM medsto_ypcgzd a
+		<include refid="medstoYpcgzdJoins"/>
+		<include refid="joinDetailTableSql"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="startDate != null and startDate != '' and endDate != null and endDate != ''">
+				AND a.cjrq between #{startDate} and #{endDate}
+			</if>
+			<if test="djh != null and djh != ''">
+				AND a.djh = #{djh}
+			</if>
+			<if test="jlzt != null and jlzt != ''">
+				AND a.jlzt = #{jlzt}
+			</if>
+			<if test="statusList != null and statusList.size()>0">
+				AND a.jlzt in <foreach collection="statusList" item="item" open="(" separator="," close=")">#{item}</foreach>
+			</if>
+			<if test="ghdwMc != null and ghdwMc != ''">
+				AND a.xh IN (select cgxh from medsto_ypcgmx where ghdw_mc = #{ghdwMc})
+			</if>
+			<if test="hospitalCode != null and hospitalCode != ''">
+				AND a.hospital_code = #{hospitalCode}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="MedstoYpcgzd">
+		SELECT 
+			<include refid="medstoYpcgzdColumns"/>
+		FROM medsto_ypcgzd a
+		<include refid="medstoYpcgzdJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO medsto_ypcgzd(
+			xh,
+			czyh,
+			cjrq,
+			djh,
+			ksdm,
+			shry,
+			shrq,
+			jlzt,
+			jzbz,
+			memo,
+			jjje,
+			lsje,
+			pfje,
+			tsypglbz,
+			del_flag,
+			create_by,
+			update_date,
+			update_by,
+			remarks,
+			create_date,
+			hospital_code,
+			hospital_name,
+			refuse_reason
+		) VALUES (
+			#{xh},
+			#{czyh},
+			#{cjrq},
+			#{djh},
+			#{ksdm},
+			#{shry},
+			#{shrq},
+			#{jlzt},
+			#{jzbz},
+			#{memo},
+			#{jjje},
+			#{lsje},
+			#{pfje},
+			#{tsypglbz},
+			#{delFlag},
+			#{createBy.id},
+			#{updateDate},
+			#{updateBy.id},
+			#{remarks},
+			#{createDate},
+			#{hospitalCode},
+			#{hospitalName},
+			#{refuseReason}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE medsto_ypcgzd SET 	
+			xh = #{xh},
+			czyh = #{czyh},
+			cjrq = #{cjrq},
+			djh = #{djh},
+			ksdm = #{ksdm},
+			shry = #{shry},
+			shrq = #{shrq},
+			jlzt = #{jlzt},
+			jzbz = #{jzbz},
+			memo = #{memo},
+			jjje = #{jjje},
+			lsje = #{lsje},
+			pfje = #{pfje},
+			tsypglbz = #{tsypglbz},
+			update_date = #{updateDate},
+			update_by = #{updateBy.id},
+			remarks = #{remarks},
+			hospital_code = #{hospitalCode},
+			hospital_name = #{hospitalName},
+			refuse_reason = #{refuseReason}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE medsto_ypcgzd SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<!-- 跟新药品采购单状态 -->
+	<update id="updateStatus">
+		UPDATE medsto_ypcgzd SET 
+			jlzt = #{jlzt},
+			refuse_reason = #{refuseReason},
+			update_date = now()
+		WHERE xh = #{xh}
+	</update>
+	
+	<!-- 根据医院查询某天的订单 -->
+	<select id="getYpcgzdByHospAndDayTime" resultType="java.util.HashMap">
+		SELECT 
+			a.xh,
+			a.jlzt
+		FROM medsto_ypcgzd a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="cjrq != null and cjrq != ''">
+				AND a.cjrq = #{cjrq}
+			</if>
+			<if test="hospitalCode != null and hospitalCode != ''">
+				AND a.hospital_code = #{hospitalCode}
+			</if>
+		</where>		
+	</select>
+</mapper>
